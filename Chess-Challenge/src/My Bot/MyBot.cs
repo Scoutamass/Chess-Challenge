@@ -22,7 +22,7 @@ public class MyBot : IChessBot
                 value -= 3;
                 if(board.HasKingsideCastleRight(white) || board.HasQueensideCastleRight(white)) value -= 7;
             }
-            board.MakeMove(m);//    THIS IS WHERE THE MOVE HAPPENS!!!!!!!!!!!!!!!!!!!!!!!
+            board.MakeMove(m);//                         THIS IS WHERE THE MOVE HAPPENS!!!!!!!!!!!!!!!!!!!!!!!
             //Move forward
             value += (white ? 1 : -1) * (m.TargetSquare.Rank - m.StartSquare.Rank);
             //Take checkmates
@@ -35,7 +35,8 @@ public class MyBot : IChessBot
             if(m.IsCastles) value += 5;
             //Avoid Draw when winning
             if(board.IsDraw()) value -= (white ? 1 : -1) * evalBoard(board)/3;
-            
+            //protect pieces and endanger enemies'
+            value += checkProtection(board, white);
             //minimize reactions
             Move[] movesBack = board.GetLegalMoves(false);
             value -= movesBack.Length;
@@ -90,7 +91,19 @@ public class MyBot : IChessBot
             foreach(int i in values) Console.Write(i + "\t");
             Console.WriteLine();
         }
+        board.MakeMove(best);
         return best;
+    }
+
+    int checkProtection(Board board, bool white)
+    {
+        const double friendlyMult = 0.01;
+        const double enemyMult = 0.01;
+        int score = 0;
+        PieceList[] allPieces = board.GetAllPieceLists();
+        foreach(PieceList pl in allPieces) foreach(Piece p in pl) if((int)p.PieceType != 6) score += (int)(((white ^ p.IsWhite) ? enemyMult : friendlyMult) * pieceValues[(int)p.PieceType]) * (board.SquareIsAttackedByOpponent(p.Square) ? 1 : 0);
+        return score;
+        return 0;
     }
 
     int evalBoard(Board board)
