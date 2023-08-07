@@ -25,10 +25,12 @@ public class MyBot : IChessBot
             board.MakeMove(m);//                         THIS IS WHERE THE MOVE HAPPENS!!!!!!!!!!!!!!!!!!!!!!!
             //Move forward
             value += (white ? 1 : -1) * (m.TargetSquare.Rank - m.StartSquare.Rank);
+            //move back row pawns
+            if((int)m.MovePieceType == 1 && (m.StartSquare.Rank == 2 || m.StartSquare.Rank == 7)) value += 2;
             //Take checkmates
             if(board.IsInCheckmate()) return m;
             //Take checks
-            if(board.IsInCheck()) value += 90;
+            if(board.IsInCheck()) value += 75;
             //Promote pawns
             if(m.IsPromotion) value += pieceValues[(int)m.PromotionPieceType] - 100;
             //Castle
@@ -103,7 +105,6 @@ public class MyBot : IChessBot
         PieceList[] allPieces = board.GetAllPieceLists();
         foreach(PieceList pl in allPieces) foreach(Piece p in pl) if((int)p.PieceType != 6) score += (int)(((white ^ p.IsWhite) ? enemyMult : friendlyMult) * pieceValues[(int)p.PieceType]) * (board.SquareIsAttackedByOpponent(p.Square) ? 1 : 0);
         return score;
-        return 0;
     }
 
     int evalBoard(Board board)

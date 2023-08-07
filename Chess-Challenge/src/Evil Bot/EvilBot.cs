@@ -28,10 +28,12 @@ namespace ChessChallenge.Example
             board.MakeMove(m);//                         THIS IS WHERE THE MOVE HAPPENS!!!!!!!!!!!!!!!!!!!!!!!
             //Move forward
             value += (white ? 1 : -1) * (m.TargetSquare.Rank - m.StartSquare.Rank);
+            //move back row pawns
+            if((int)m.MovePieceType == 1 && (m.StartSquare.Rank == 2 || m.StartSquare.Rank == 7)) value += 2;
             //Take checkmates
             if(board.IsInCheckmate()) return m;
             //Take checks
-            if(board.IsInCheck()) value += 90;
+            if(board.IsInCheck()) value += 80;
             //Promote pawns
             if(m.IsPromotion) value += pieceValues[(int)m.PromotionPieceType] - 100;
             //Castle
