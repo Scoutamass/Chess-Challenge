@@ -1,7 +1,6 @@
 ﻿using ChessChallenge.API;
 using System;
 
-
 public class MyBot : IChessBot
 {
     int[] pieceValues = {0, 100, 300, 300, 500, 900, 9999};
@@ -10,17 +9,19 @@ public class MyBot : IChessBot
     {
         Move[] moves = board.GetLegalMoves();
         int[] values = new int[moves.Length];
+        Random rand = new Random();
         white = board.IsWhiteToMove;
 
         for(int i = 0; i < moves.GetLength(0); i++)
         {
             Move m = moves[i];
+            //int value = rand.Next()%3 - 1;
             int value = 0;
             //Don't move king
             if((int)m.MovePieceType == 6)
             {
-                value -= 3;
-                if(board.HasKingsideCastleRight(white) || board.HasQueensideCastleRight(white)) value -= 7;
+                value -= 4;
+                if((board.HasKingsideCastleRight(white) || board.HasQueensideCastleRight(white)) && !m.IsCastles) value -= 7;
             }
             board.MakeMove(m);//                         THIS IS WHERE THE MOVE HAPPENS!!!!!!!!!!!!!!!!!!!!!!!
             //Move forward
@@ -34,10 +35,10 @@ public class MyBot : IChessBot
             //Promote pawns
             if(m.IsPromotion) value += pieceValues[(int)m.PromotionPieceType] - 100;
             //Castle
-            if(m.IsCastles) value += 5;
+            if(m.IsCastles) value += 6;
             //Avoid Draw when winning
             if(board.IsDraw()) value -= (white ? 1 : -1) * evalBoard(board)/3;
-            //protect pieces and endanger enemies'
+            //protect pieces and endanger enemy's
             value += checkProtection(board, white);
             //minimize reactions
             Move[] movesBack = board.GetLegalMoves(false);
@@ -65,7 +66,7 @@ public class MyBot : IChessBot
                     board.UndoMove(b);
                     if(board.SquareIsAttackedByOpponent(b.TargetSquare) && check)
                     {
-                        value += 190;
+                        value += 180;
                     }
                     highestCaptured = (int)Math.Max(highestCaptured, pieceValues[(int)b.CapturePieceType] * (board.SquareIsAttackedByOpponent(b.TargetSquare) ? 0.5 : 1));
                 }
@@ -88,9 +89,8 @@ public class MyBot : IChessBot
         }
         if(false)
         {
-            foreach(Move m in moves) Console.Write(m.StartSquare.Name + m.TargetSquare.Name + "\t");
-            Console.WriteLine();
-            foreach(int i in values) Console.Write(i + "\t");
+            board.TrySkipTurn();
+            Console.Write(checkProtection(board, white) + "\t");
             Console.WriteLine();
         }
         board.MakeMove(best);
@@ -119,4 +119,3 @@ public class MyBot : IChessBot
     }
         
 }
-

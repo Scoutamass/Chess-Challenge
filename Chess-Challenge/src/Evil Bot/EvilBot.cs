@@ -33,7 +33,7 @@ namespace ChessChallenge.Example
             //Take checkmates
             if(board.IsInCheckmate()) return m;
             //Take checks
-            if(board.IsInCheck()) value += 80;
+            if(board.IsInCheck()) value += 75;
             //Promote pawns
             if(m.IsPromotion) value += pieceValues[(int)m.PromotionPieceType] - 100;
             //Castle
@@ -42,6 +42,7 @@ namespace ChessChallenge.Example
             if(board.IsDraw()) value -= (white ? 1 : -1) * evalBoard(board)/3;
             //protect pieces and endanger enemies'
             value += checkProtection(board, white);
+            //value -= checkDanger(board, white);
             //minimize reactions
             Move[] movesBack = board.GetLegalMoves(false);
             value -= movesBack.Length;
@@ -89,13 +90,6 @@ namespace ChessChallenge.Example
             bestvalue = values[i];
             best = moves[i];
         }
-        if(false)
-        {
-            foreach(Move m in moves) Console.Write(m.StartSquare.Name + m.TargetSquare.Name + "\t");
-            Console.WriteLine();
-            foreach(int i in values) Console.Write(i + "\t");
-            Console.WriteLine();
-        }
         board.MakeMove(best);
         return best;
     }
@@ -108,6 +102,23 @@ namespace ChessChallenge.Example
         PieceList[] allPieces = board.GetAllPieceLists();
         foreach(PieceList pl in allPieces) foreach(Piece p in pl) if((int)p.PieceType != 6) score += (int)(((white ^ p.IsWhite) ? enemyMult : friendlyMult) * pieceValues[(int)p.PieceType]) * (board.SquareIsAttackedByOpponent(p.Square) ? 1 : 0);
         return score;
+    }
+
+    int checkDanger(Board board, bool white)
+    {
+        if(board.TrySkipTurn())
+        {
+            const double friendlyMult = 0.01;
+            const double enemyMult = 0.005;
+            int score = 0;
+            PieceList[] allPieces = board.GetAllPieceLists();
+            foreach(PieceList pl in allPieces) foreach(Piece p in pl) if((int)p.PieceType != 6)
+            {
+                score += (int)(((white ^ p.IsWhite) ? enemyMult : friendlyMult) * pieceValues[(int)p.PieceType]) * (board.SquareIsAttackedByOpponent(p.Square) ? 1 : 0);
+            }
+            board.UndoSkipTurn();
+            return score;
+        }
         return 0;
     }
 
@@ -121,5 +132,6 @@ namespace ChessChallenge.Example
         }
         return score;
     }
+     
     }
 }
